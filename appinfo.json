@@ -10,13 +10,16 @@
         "tapp": 3,
         "tcgm": 2,
         "ubat": 5,
-        "vals": 7
+        "vals": 7,
+        "bwpv": 11,
+        "bwpo": 12,
+        "iobv": 13
     },
     "capabilities": [
         "configurable"
     ],
     "companyName": "Nightscout Contributors",
-    "longName": "NIGHTSCOUT",
+    "longName": "NSBWP",
     "projectType": "native",
     "resources": {
         "media": [
@@ -124,8 +127,8 @@
         ]
     },
     "sdkVersion": "2",
-    "shortName": "Nightscout",
-    "uuid": "4bfa0b46-b9fa-4e1a-b2ba-a2ba7168f897",
+    "shortName": "NSBWP",
+    "uuid": "c89b4b29-bbe4-4d45-bda3-c41e8c8367d3",
     "versionCode": 1,
     "versionLabel": "7.3",
     "watchapp": {

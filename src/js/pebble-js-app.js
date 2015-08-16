@@ -25,7 +25,9 @@ function fetchCgmData() {
           vals: " ",
           clrw: " ",
           rwuf: " ",
-          noiz: 0
+          noiz: 0,
+          bwpv: " ",
+          bwpo: " "
         };
         
         console.log("NO ENDPOINT JS message", JSON.stringify(message));
@@ -117,6 +119,15 @@ function fetchCgmData() {
                     currentSlope = "undefined",
                     currentScale = "undefined",
                     currentRatio = 0;
+  
+                    currentBWP =  "BWP:"+responsebgs[0].bwp,
+                    currentBWPO = "OUT:"+responsebgs[0].bwpo;
+                    
+                    iobMSG = "IOB:" + responsebgs[0].iob;
+ 
+ 					if (Number(responsebgs[0].bwp) < 0) {
+ 					  currentBWP =  "BWP: <0";
+ 					}
   
                     // get name of T1D; if iob (case insensitive), use IOB
                     if ( (NameofT1DPerson.toUpperCase() === "IOB") && 
@@ -297,7 +308,10 @@ function fetchCgmData() {
                       vals: values,
                       clrw: formatCalcRaw,
                       rwuf: formatRawUnfilt,
-                      noiz: currentNoise
+                      noiz: currentNoise,
+                      bwpv: currentBWP,
+                      bwpo: currentBWPO,
+                      iobv: iobMSG
                     };
                     
                     // send message data to log and to watch

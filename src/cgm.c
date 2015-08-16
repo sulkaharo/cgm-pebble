@@ -29,6 +29,10 @@ TextLayer *calcraw_last1_layer = NULL;
 TextLayer *calcraw_last2_layer = NULL;
 TextLayer *calcraw_last3_layer = NULL;
 
+TextLayer *bwp_layer = NULL;
+TextLayer *bwpo_layer = NULL;
+TextLayer *iobv_layer = NULL;
+
 BitmapLayer *icon_layer = NULL;
 BitmapLayer *cgmicon_layer = NULL;
 BitmapLayer *perfectbg_layer = NULL;
@@ -282,7 +286,11 @@ enum CgmKey {
 	CGM_VALS_KEY = 0x7,   // TUPLE_CSTRING, MAX 25 BYTES (0,000,000,000,000,0,0,0,0)
 	CGM_CLRW_KEY = 0x8,   // TUPLE_CSTRING, MAX 4 BYTES (253 OR 22.2)
 	CGM_RWUF_KEY = 0x9,   // TUPLE_CSTRING, MAX 4 BYTES (253 OR 22.2)
-	CGM_NOIZ_KEY = 0xA    // TUPLE_INT, 4 BYTES (1-4)
+	CGM_NOIZ_KEY = 0xA,    // TUPLE_INT, 4 BYTES (1-4)
+	CGM_BWPV_KEY = 0xB,
+	CGM_BWPO_KEY = 0xC,
+	CGM_IOBV_KEY = 0xD,
+	
 }; 
 // TOTAL MESSAGE DATA 4x6+2+5+3+9+25 = 68 BYTES
 // TOTAL KEY HEADER DATA (STRINGS) 4x10+2 = 42 BYTES
@@ -1526,7 +1534,8 @@ static void load_bg() {
 		  //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BG, SET TO BG: %s ", last_bg);
 		  text_layer_set_text(bg_layer, last_bg);
  
-      if (HardCodeNoAnimations == 100) {
+      // TODO REMOVE
+      if (false) { // HardCodeNoAnimations == 100) {
         if ( ((currentBG_isMMOL == 100) && (current_bg == 100)) || ((currentBG_isMMOL == 111) && (current_bg == 55)) ) {
 		      // PERFECT BG CLUB, ANIMATE BG      
 		      //APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BG, ANIMATE PERFECT BG");
@@ -2287,6 +2296,25 @@ void sync_tuple_changed_callback_cgm(const uint32_t key, const Tuple* new_tuple,
       //APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: T1D NAME");
       text_layer_set_text(t1dname_layer, new_tuple->value->cstring);
       break; // break for CGM_NAME_KEY
+
+	case CGM_BWPV_KEY:;
+      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPV_KEY");
+      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
+      text_layer_set_text(bwp_layer, new_tuple->value->cstring);
+      break; // break for CGM_NAME_KEY
+
+	case CGM_BWPO_KEY:;
+      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPO_KEY");
+      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
+      text_layer_set_text(bwpo_layer, new_tuple->value->cstring);
+      break; // break for CGM_NAME_KEY
+
+	case CGM_IOBV_KEY:;
+//      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPO_KEY");
+//      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
+      text_layer_set_text(iobv_layer, new_tuple->value->cstring);
+      break; // break for CGM_NAME_KEY
+
     
   case CGM_VALS_KEY:;
       //APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: VALUES");
@@ -2515,6 +2543,32 @@ void window_load_cgm(Window *window_cgm) {
   text_layer_set_text_alignment(t1dname_layer, GTextAlignmentLeft);
   layer_add_child(window_layer_cgm, text_layer_get_layer(t1dname_layer));
   
+  // BWP
+  bwp_layer = text_layer_create(GRect(0, 99, 140, 28));
+  text_layer_set_text_color(bwp_layer, GColorWhite);
+  text_layer_set_background_color(bwp_layer, GColorClear);
+  text_layer_set_font(bwp_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text_alignment(bwp_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer_cgm, text_layer_get_layer(bwp_layer));
+
+  // BWPO
+  bwpo_layer = text_layer_create(GRect(71, 120, 72, 28));
+  text_layer_set_text_color(bwpo_layer, GColorWhite);
+  text_layer_set_background_color(bwpo_layer, GColorClear);
+  text_layer_set_font(bwpo_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text_alignment(bwpo_layer, GTextAlignmentRight);
+  layer_add_child(window_layer_cgm, text_layer_get_layer(bwpo_layer));
+
+  // IOBV
+  iobv_layer = text_layer_create(GRect(2, 120, 72, 28));
+  text_layer_set_text_color(iobv_layer, GColorWhite);
+  text_layer_set_background_color(iobv_layer, GColorClear);
+  text_layer_set_font(iobv_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text_alignment(iobv_layer, GTextAlignmentLeft);
+  layer_add_child(window_layer_cgm, text_layer_get_layer(iobv_layer));
+
+
+
   // WATCH BATTERY LEVEL
   watch_battlevel_layer = text_layer_create(GRect(71, 145, 72, 22));
   text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
@@ -2525,18 +2579,19 @@ void window_load_cgm(Window *window_cgm) {
   layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
 
   // TIME; CURRENT ACTUAL TIME FROM WATCH
-  time_watch_layer = text_layer_create(GRect(0, 102, 144, 44));
+  time_watch_layer = text_layer_create(GRect(0, 80, 72, 28));
   text_layer_set_text_color(time_watch_layer, GColorWhite);
   text_layer_set_background_color(time_watch_layer, GColorClear);
-  text_layer_set_font(time_watch_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  text_layer_set_font(time_watch_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(time_watch_layer, GTextAlignmentCenter);
   layer_add_child(window_layer_cgm, text_layer_get_layer(time_watch_layer));
+
   
   // DATE
-  date_app_layer = text_layer_create(GRect(39, 80, 72, 28));
+  date_app_layer = text_layer_create(GRect(71, 80, 72, 28));
   text_layer_set_text_color(date_app_layer, GColorWhite);
   text_layer_set_background_color(date_app_layer, GColorClear);
-  text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text_alignment(date_app_layer, GTextAlignmentCenter);
   draw_date_from_app();
   layer_add_child(window_layer_cgm, text_layer_get_layer(date_app_layer));
@@ -2578,7 +2633,10 @@ void window_load_cgm(Window *window_cgm) {
   TupletCString(CGM_VALS_KEY, " "),
   TupletCString(CGM_CLRW_KEY, " "),
   TupletCString(CGM_RWUF_KEY, " "),
-  TupletInteger(CGM_NOIZ_KEY, 0)
+  TupletInteger(CGM_NOIZ_KEY, 0),
+  TupletCString(CGM_BWPV_KEY, " "),
+  TupletCString(CGM_BWPO_KEY, " "),
+  TupletCString(CGM_IOBV_KEY, " ")
   };
   
   //APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW LOAD, ABOUT TO CALL APP SYNC INIT");
@@ -2628,6 +2686,10 @@ void window_unload_cgm(Window *window_cgm) {
   destroy_null_TextLayer(&calcraw_last1_layer);
   destroy_null_TextLayer(&calcraw_last2_layer);
   destroy_null_TextLayer(&calcraw_last3_layer);
+
+  destroy_null_TextLayer(&bwp_layer);
+  destroy_null_TextLayer(&bwpo_layer);
+  destroy_null_TextLayer(&iobv_layer);
 
   //APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD, DESTROY INVERTER LAYERS IF EXIST");  
   destroy_null_InverterLayer(&inv_rig_battlevel_layer);
