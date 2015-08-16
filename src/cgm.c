@@ -2298,14 +2298,14 @@ void sync_tuple_changed_callback_cgm(const uint32_t key, const Tuple* new_tuple,
       break; // break for CGM_NAME_KEY
 
 	case CGM_BWPV_KEY:;
-      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPV_KEY");
-      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
+//      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPV_KEY");
+//      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
       text_layer_set_text(bwp_layer, new_tuple->value->cstring);
       break; // break for CGM_NAME_KEY
 
 	case CGM_BWPO_KEY:;
-      APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPO_KEY");
-      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
+//     APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: CGM_BWPO_KEY");
+//      APP_LOG(APP_LOG_LEVEL_INFO, new_tuple->value->cstring);
       text_layer_set_text(bwpo_layer, new_tuple->value->cstring);
       break; // break for CGM_NAME_KEY
 
