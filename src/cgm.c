@@ -1,6 +1,8 @@
 #include "pebble.h"
 #include "stddef.h"
 #include "string.h"
+#include "effect_layer.h"
+#include "time.h"
   
 // global window variables
 // ANYTHING THAT IS CALLED BY PEBBLE API HAS TO BE NOT STATIC
@@ -42,7 +44,7 @@ GBitmap *cgmicon_bitmap = NULL;
 GBitmap *specialvalue_bitmap = NULL;
 GBitmap *perfectbg_bitmap = NULL;
 
-InverterLayer *inv_rig_battlevel_layer = NULL;
+EffectLayer *inv_rig_battlevel_layer = NULL;
 
 PropertyAnimation *perfectbg_animation = NULL;
 PropertyAnimation *happymsg_animation = NULL;
@@ -592,12 +594,12 @@ static void destroy_null_TextLayer(TextLayer **txt_layer) {
 //APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL TEXT LAYER: EXIT CODE");
 } // end destroy_null_TextLayer
 
-static void destroy_null_InverterLayer(InverterLayer **inv_layer) {
+static void destroy_null_EffectLayer(EffectLayer **inv_layer) {
 	//APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: ENTER CODE");
 	
 	if (*inv_layer != NULL) {
     //APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: POINTER EXISTS, DESTROY INVERTER LAYER");
-      inverter_layer_destroy(*inv_layer);
+      effect_layer_destroy(*inv_layer);
       if (*inv_layer != NULL) {
         //APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: POINTER EXISTS, SET POINTER TO NULL");
         *inv_layer = NULL;
@@ -1816,6 +1818,27 @@ static void load_cgmtime() {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CGM TIMEAGO LABEL OUT: %s", cgm_label_buffer);
 } // end load_cgmtime
 
+// Gets the UTC offset of the local time in seconds 
+// (pass in an existing localtime struct tm to save creating another one, or else pass NULL)
+time_t get_UTC_offset(struct tm *t) {
+#ifdef PBL_SDK_3
+  if (t == NULL) {
+    time_t temp;
+    temp = time(NULL);
+    t = localtime(&temp);
+  }
+  
+  return t->tm_gmtoff + ((t->tm_isdst > 0) ? 3600 : 0);
+#else
+  // SDK2 uses localtime instead of UTC for all time functions so always return 0
+  return 0; 
+#endif 
+}
+
+time_t get_local_timestamp() {
+  return time(NULL) + get_UTC_offset(NULL);
+}
+
 static void load_apptime(){
     //APP_LOG(APP_LOG_LEVEL_INFO, "LOAD APPTIME, READ APP TIME FUNCTION START");
 	
@@ -1827,7 +1850,7 @@ static void load_apptime(){
 	
 	draw_date_from_app();  
        
-      app_time_now = time(NULL);
+      app_time_now = get_local_timestamp();
       
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TIME NOW: %lu", app_time_now);
       
@@ -1836,6 +1859,11 @@ static void load_apptime(){
       //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, CURRENT APP TIMEAGO: %lu", current_app_timeago);
       
 	  app_timeago_diff = (current_app_timeago / MINUTEAGO);
+	  
+	  //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, app_timeago_diff: %d", app_timeago_diff);
+	  //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, TWOYEARSAGO: %lu", TWOYEARSAGO);
+	  //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD APPTIME, PHONEOUT_WAIT_MIN: %d", PHONEOUT_WAIT_MIN);
+      
 	  if ( (current_app_timeago < TWOYEARSAGO) && (app_timeago_diff >= PHONEOUT_WAIT_MIN) ) {
               
         // erase cgm ago times and cgm icon
@@ -2480,8 +2508,9 @@ void window_load_cgm(Window *window_cgm) {
   layer_add_child(window_layer_cgm, text_layer_get_layer(rig_battlevel_layer));
   
   // INVERTER BATTERY LAYER
-  inv_rig_battlevel_layer = inverter_layer_create(GRect(112, 66, 30, 15));
-  layer_add_child(window_get_root_layer(window_cgm), inverter_layer_get_layer(inv_rig_battlevel_layer));
+  inv_rig_battlevel_layer = effect_layer_create(GRect(112, 66, 30, 15));
+  effect_layer_add_effect(inv_rig_battlevel_layer, effect_invert, NULL);
+  layer_add_child(window_get_root_layer(window_cgm), effect_layer_get_layer(inv_rig_battlevel_layer));
   
   // BG
   bg_layer = text_layer_create(GRect(0, -5, 95, 47));
@@ -2692,7 +2721,7 @@ void window_unload_cgm(Window *window_cgm) {
   destroy_null_TextLayer(&iobv_layer);
 
   //APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD, DESTROY INVERTER LAYERS IF EXIST");  
-  destroy_null_InverterLayer(&inv_rig_battlevel_layer);
+  destroy_null_EffectLayer(&inv_rig_battlevel_layer);
   
   // destroy animation
   //destroy_perfectbg_animation(&perfectbg_animation);
@@ -2721,7 +2750,7 @@ static void init_cgm(void) {
   // create the windows
   window_cgm = window_create();
   window_set_background_color(window_cgm, GColorBlack);
-  window_set_fullscreen(window_cgm, true);
+  //window_set_fullscreen(window_cgm, true);
   window_set_window_handlers(window_cgm, (WindowHandlers) {
     .load = window_load_cgm,
     .unload = window_unload_cgm  
@@ -2786,7 +2815,6 @@ static void deinit_cgm(void) {
 int main(void) {
 
   init_cgm();
-
   app_event_loop();
   deinit_cgm();
   
